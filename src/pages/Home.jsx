@@ -7,6 +7,9 @@ import { url } from '../const'
 import './home.scss'
 import formatDate from '../hooks/formatDate'
 import limitDate from '../hooks/limitDate'
+import { handleKeyDown } from '../hooks/handleKeyDown'
+
+import { useRef } from 'react'
 
 export const Home = () => {
   const [isDoneDisplay, setIsDoneDisplay] = useState('todo') // todo->未完了 done->完了
@@ -14,8 +17,11 @@ export const Home = () => {
   const [selectListId, setSelectListId] = useState()
   const [tasks, setTasks] = useState([])
   const [errorMessage, setErrorMessage] = useState('')
-  const [cookies] = useCookies()
+  const [cookies, setCookie, removeCookie] = useCookies()
+  void setCookie
+  void removeCookie
   const handleIsDoneDisplayChange = (e) => setIsDoneDisplay(e.target.value)
+  const listRefs = useRef([])
   useEffect(() => {
     axios
       .get(`${url}/lists`, {
@@ -85,13 +91,20 @@ export const Home = () => {
             </div>
           </div>
           <ul className="list-tab">
-            {lists.map((list, key) => {
+            {lists.map((list, index) => {
               const isActive = list.id === selectListId
               return (
                 <li
-                  key={key}
+                  key={list.id}
+                  ref={(el) => (listRefs.current[index] = el)}
+                  role="tab"
+                  aria-selected={isActive}
+                  tabIndex={isActive ? 0 : -1} // 今のタブだけ tabIndex=0
                   className={`list-tab-item ${isActive ? 'active' : ''}`}
                   onClick={() => handleSelectList(list.id)}
+                  onKeyDown={(e) =>
+                    handleKeyDown(e, index, lists, listRefs, handleSelectList)
+                  }
                 >
                   {list.title}
                 </li>
@@ -137,7 +150,7 @@ const Tasks = (props) => {
             return task.done === true
           })
           .map((task, key) => {
-            const formattedLimit = formatDate(task.limit);
+            const formattedLimit = formatDate(task.limit)
             return (
               <li key={key} className="task-item">
                 <Link
@@ -153,7 +166,7 @@ const Tasks = (props) => {
                   {task.done ? '完了' : '未完了'}
                 </Link>
               </li>
-            );
+            )
           })}
       </ul>
     )
@@ -166,24 +179,24 @@ const Tasks = (props) => {
           return task.done === false
         })
         .map((task, key) => {
-          const formattedLimit = formatDate(task.limit);
+          const formattedLimit = formatDate(task.limit)
           return (
-          <li key={key} className="task-item">
-            <Link
-              to={`/lists/${selectListId}/tasks/${task.id}`}
-              className="task-item-link"
-            >
-              {task.title}
-              <br />
-              期限：{formattedLimit}
-              <br />
-              締切まで：{limitDate(task.limit)}
-              <br />
-              {task.done ? '完了' : '未完了'}
-            </Link>
-          </li>
-        );
-      })}
+            <li key={key} className="task-item">
+              <Link
+                to={`/lists/${selectListId}/tasks/${task.id}`}
+                className="task-item-link"
+              >
+                {task.title}
+                <br />
+                期限：{formattedLimit}
+                <br />
+                締切まで：{limitDate(task.limit)}
+                <br />
+                {task.done ? '完了' : '未完了'}
+              </Link>
+            </li>
+          )
+        })}
     </ul>
   )
 }

@@ -20,17 +20,17 @@ export const NewTask = () => {
   const handleDateChange = (e) => setLimit(e.target.value)
   const handleSelectList = (id) => setSelectListId(id)
   const onCreateTask = () => {
-  const isoLimit = new Date(limit).toISOString()
-  console.log('送信する日付:', isoLimit)
-    
-  const data = {
-    title: title,
-    detail: detail,
-    done: false,
-    limit: isoLimit,
-  }
+    const isoLimit = new Date(limit).toISOString()
+    console.log('送信する日付:', isoLimit)
 
-  axios
+    const data = {
+      title: title,
+      detail: detail,
+      done: false,
+      limit: isoLimit,
+    }
+
+    axios
       .post(`${url}/lists/${selectListId}/tasks`, data, {
         headers: {
           authorization: `Bearer ${cookies.token}`,
